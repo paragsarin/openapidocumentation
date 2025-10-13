@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #007bff;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #495057;
+            margin-top: 25px;
+        }
+        .endpoint {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background-color: #28a745; }
+        .post { background-color: #007bff; }
+        .put { background-color: #ffc107; color: #212529; }
+        .patch { background-color: #6c757d; }
+        .delete { background-color: #dc3545; }
+        .path {
+            font-family: monospace;
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .parameter {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .required {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .optional {
+            color: #6c757d;
+        }
+        .response {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .info-section {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .tag-section {
+            margin: 30px 0;
+            border-left: 4px solid #007bff;
+            padding-left: 15px;
+        }
+        .schema {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .schema-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .schema-link:hover {
+            text-decoration: underline;
+        }
+        .nav-links {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 5px 15px 5px 0;
+            font-weight: bold;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        #fileInput {
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #generateBtn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #generateBtn:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OpenAPI Documentation Generator</h1>
+        
+        <div id="fileInput">
+            <div style="margin-bottom: 20px;">
+                <h3>Option 1: Download from URL</h3>
+                <input type="url" id="urlInput" placeholder="Enter OpenAPI spec URL (e.g., https://example.com/openapi.json)" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;" />
+                <button id="downloadBtn" onclick="downloadFromUrl()" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Download & Generate</button>
+                <div id="downloadLoader" style="display: none; margin: 10px 0; color: #007bff; text-align: center;">
+                    <div style="display: inline-flex; align-items: center;">
+                        <div style="border: 3px solid #f3f3f3; border-top: 3px solid #007bff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px;"></div>
+                        <span>Downloading...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid #ccc; padding-top: 20px;">
+                <h3>Option 2: Upload File</h3>
+                <input type="file" id="jsonFile" accept=".json" />
+                <p>Select your openapi-specs.json file</p>
+                <button id="generateBtn" onclick="generateDocs()">Generate Documentation</button>
+            </div>
+            
+            <button id="exportBtn" onclick="exportHTML()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; display: none;">Export HTML</button>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+
+    <script>
+        async function downloadFromUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const output = document.getElementById('output');
+            const loader = document.getElementById('downloadLoader');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const jsonFile = document.getElementById('jsonFile');
+            
+            if (!urlInput.value) {
+                alert('Please enter a URL first');
+                return;
+            }
+            
+            // Show loader and disable all buttons
+            loader.style.display = 'block';
+            downloadBtn.classList.add('disabled');
+            generateBtn.classList.add('disabled');
+            exportBtn.classList.add('disabled');
+            urlInput.disabled = true;
+            jsonFile.disabled = true;
+            
+            try {
+                const response = await fetch(urlInput.value);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const specText = await response.text();
+                const spec = JSON.parse(specText);
+                const html = generateHTML(spec);
+                output.innerHTML = html;
+                exportBtn.style.display = 'inline-block';
+            } catch (error) {
+                output.innerHTML = `<div style="color: red;">Error downloading or parsing: ${error.message}</div>`;
+            } finally {
+                // Hide loader and re-enable all buttons
+                loader.style.display = 'none';
+                downloadBtn.classList.remove('disabled');
+                generateBtn.classList.remove('disabled');
+                exportBtn.classList.remove('disabled');
+                urlInput.disabled = false;
+                jsonFile.disabled = false;
+            }
+        }
+        
+        function generateDocs() {
+            const fileInput = document.getElementById('jsonFile');
+            const output = document.getElementById('output');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a JSON file first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const spec = JSON.parse(e.target.result);
+                    const html = generateHTML(spec);
+                    output.innerHTML = html;
+                    document.getElementById('exportBtn').style.display = 'inline-block';
+                } catch (error) {
+                    output.innerHTML = `<div style="color: red;">Error parsing JSON: ${error.message}</div>`;
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        function generateHTML(spec) {
+            let html = `
+                <div class="info-section">
+                    <h3>API</h3>
+                    <p><strong>Version:</strong> ${spec.info?.version || 'N/A'}</p>
+                    <p><strong>Base URL:</strong> http{s}://{server name}/api/</p>
+                </div>
+            `;
+            
+            // Group endpoints by tags
+            const tagGroups = {};
+            
+            if (spec.paths) {
+                Object.keys(spec.paths).forEach(path => {
+                    const pathObj = spec.paths[path];
+                    Object.keys(pathObj).forEach(method => {
+                        const operation = pathObj[method];
+                        const tags = operation.tags || ['Default'];
+                        
+                        tags.forEach(tag => {
+                            if (!tagGroups[tag]) {
+                                tagGroups[tag] = [];
+                            }
+                            tagGroups[tag].push({
+                                path,
+                                method: method.toUpperCase(),
+                                operation
+                            });
+                        });
+                    });
+                });
+            }
+            
+            // Generate navigation links
+            if (Object.keys(tagGroups).length > 0) {
+                html += '<div class="nav-links"><h4>Quick Navigation:</h4>';
+                Object.keys(tagGroups).sort().forEach(tag => {
+                    const displayName = getDisplayName(tag);
+                    html += `<a href="#tag-${tag}">${displayName}</a>`;
+                });
+                if (spec.definitions || (spec.components && spec.components.schemas)) {
+                    html += '<a href="#data-models">Data Models</a>';
+                }
+                html += '</div>';
+            }
+            
+            // Generate HTML for each tag group
+            Object.keys(tagGroups).sort().forEach(tag => {
+                const displayName = getDisplayName(tag);
+                html += `<div class="tag-section" id="tag-${tag}"><h2>${displayName}</h2>`;
+                
+                tagGroups[tag].forEach(endpoint => {
+                    html += generateEndpointHTML(endpoint);
+                });
+                
+                html += '</div>';
+            });
+            
+            // Add schemas section if available
+            const schemas = spec.definitions || (spec.components && spec.components.schemas);
+            if (schemas) {
+                html += generateSchemasHTML(schemas);
+            }
+            
+            return html;
+        }
+        
+        function generateEndpointHTML(endpoint) {
+            const { path, method, operation } = endpoint;
+            
+            let html = `
+                <div class="endpoint">
+                    <h3>
+                        <span class="method ${method.toLowerCase()}">${method}</span>
+                        <span class="path">${path}</span>
+                    </h3>
+            `;
+            
+            if (operation.summary) {
+                html += `<p><strong>Summary:</strong> ${operation.summary}</p>`;
+            }
+            
+            if (operation.description) {
+                html += `<p><strong>Description:</strong> ${operation.description}</p>`;
+            }
+            
+            if (operation.operationId) {
+                html += `<p><strong>Operation ID:</strong> ${operation.operationId}</p>`;
+            }
+            
+            // Parameters
+            if (operation.parameters && operation.parameters.length > 0) {
+                html += '<h4>Parameters:</h4>';
+                operation.parameters.forEach(param => {
+                    const required = param.required ? 'required' : 'optional';
+                    html += `
+                        <div class="parameter">
+                            <strong>${param.name}</strong> <span class="${required}">(${required})</span><br>
+                            <em>${param.in} parameter</em><br>
+                            Type: ${param.type || param.schema?.type || 'object'}<br>
+                            ${param.description ? `Description: ${param.description}<br>` : ''}
+                            ${param.schema ? `Schema: ${formatSchemaWithLinks(param.schema)}` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            // Request Body (OpenAPI 3.0)
+            if (operation.requestBody) {
+                html += '<h4>Request Body:</h4>';
+                const requestBody = operation.requestBody;
+                html += `
+                    <div class="parameter">
+                        ${requestBody.description ? `<strong>Description:</strong> ${requestBody.description}<br>` : ''}
+                        ${requestBody.required ? '<span class="required">(required)</span><br>' : '<span class="optional">(optional)</span><br>'}
+                `;
+                
+                if (requestBody.content) {
+                    html += '<strong>Content Types:</strong><br>';
+                    Object.keys(requestBody.content).forEach(contentType => {
+                        const content = requestBody.content[contentType];
+                        html += `<em>${contentType}</em><br>`;
+                        if (content.schema) {
+                            html += `Schema: ${formatSchemaWithLinks(content.schema)}<br>`;
+                        }
+                    });
+                }
+                html += '</div>';
+            }
+            
+            // Responses
+            if (operation.responses) {
+                html += '<h4>Responses:</h4>';
+                Object.keys(operation.responses).forEach(statusCode => {
+                    const response = operation.responses[statusCode];
+                    html += `
+                        <div class="response">
+                            <strong>${statusCode} ${response.description || ''}</strong><br>
+                            ${operation.produces ? `Content-Type: ${operation.produces.join(', ')}<br>` : ''}
+                            ${response.schema ? `Schema: ${formatSchemaWithLinks(response.schema)}` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function generateSchemasHTML(definitions) {
+            let html = `
+                <div class="tag-section" id="data-models">
+                    <h2>Data Models</h2>
+                    <p>Schema definitions for request and response objects:</p>
+            `;
+            
+            Object.keys(definitions).sort().forEach(schemaName => {
+                const schema = definitions[schemaName];
+                html += `
+                    <div class="endpoint" id="schema-${schemaName}">
+                        <h3>${schemaName}</h3>
+                        <div class="schema">${formatSchemaWithLinks(schema)}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function formatSchemaWithLinks(schema) {
+            let schemaStr = JSON.stringify(schema, null, 2);
+            
+            // Replace $ref references with clickable links
+            // OpenAPI 2.0 format: #/definitions/SchemaName
+            schemaStr = schemaStr.replace(/"\$ref":\s*"#\/definitions\/([^"]+)"/g, 
+                '"$ref": "<a href="#schema-$1" class="schema-link">$1</a>"');
+            
+            // OpenAPI 3.0 format: #/components/schemas/SchemaName
+            schemaStr = schemaStr.replace(/"\$ref":\s*"#\/components\/schemas\/([^"]+)"/g, 
+                '"$ref": "<a href="#schema-$1" class="schema-link">$1</a>"');
+            
+            return schemaStr;
+        }
+        
+        function getDisplayName(tag) {
+            const displayNames = {
+            };
+            return displayNames[tag] || tag;
+        }
+        
+        function exportHTML() {
+            const output = document.getElementById('output');
+            if (!output.innerHTML) {
+                alert('Please generate documentation first');
+                return;
+            }
+            
+            const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        ${document.querySelector('style').innerHTML}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Documentation</h1>
+        ${output.innerHTML}
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'api-documentation.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

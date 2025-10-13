@@ -167,6 +167,8 @@
         <div id="fileInput">
             <div style="margin-bottom: 20px;">
                 <h3>Option 1: Download from URL</h3>
+                <p style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; border-radius: 4px; font-size: 14px; margin: 10px 0;">⚠️ Note: CORS issues may occur with some URLs. If download fails, use Option 2 instead.</p>
+
                 <input type="url" id="urlInput" placeholder="Enter OpenAPI spec URL (e.g., https://example.com/openapi.json)" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;" />
                 <button id="downloadBtn" onclick="downloadFromUrl()" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Download & Generate</button>
                 <div id="downloadLoader" style="display: none; margin: 10px 0; color: #007bff; text-align: center;">

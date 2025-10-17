@@ -170,7 +170,7 @@
                 <p style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; border-radius: 4px; font-size: 14px; margin: 10px 0;">⚠️ Note: CORS issues may occur with some URLs. If download fails, use Option 2 instead.</p>
 
                 <input type="url" id="urlInput" placeholder="Enter OpenAPI spec URL (e.g., https://example.com/openapi.json)" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;" />
-                <button id="downloadBtn" onclick="downloadFromUrl()" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Download & Generate</button>
+                <button id="downloadBtn" onclick="downloadFromUrl()" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">Download & Generate</button>
                 <div id="downloadLoader" style="display: none; margin: 10px 0; color: #007bff; text-align: center;">
                     <div style="display: inline-flex; align-items: center;">
                         <div style="border: 3px solid #f3f3f3; border-top: 3px solid #007bff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px;"></div>
@@ -181,6 +181,11 @@
             
             <div style="border-top: 1px solid #ccc; padding-top: 20px;">
                 <h3>Option 2: Upload File</h3>
+                <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                    <strong>Sample files to download:</strong><br>
+                    <a href="#" onclick="downloadSample('v2')" style="color: #007bff; text-decoration: none; margin-right: 15px;">OpenAPI v2 Sample</a>
+                    <a href="#" onclick="downloadSample('v3')" style="color: #007bff; text-decoration: none;">OpenAPI v3 Sample</a>
+                </div>
                 <input type="file" id="jsonFile" accept=".json" />
                 <p>Select your openapi-specs.json file</p>
                 <button id="generateBtn" onclick="generateDocs()">Generate Documentation</button>
@@ -216,7 +221,29 @@
             jsonFile.disabled = true;
             
             try {
-                const response = await fetch(urlInput.value);
+                let fetchUrl = urlInput.value;
+                
+                // Try direct fetch first, then fallback to CORS proxy if needed
+                let response;
+                try {
+                    response = await fetch(fetchUrl);
+                } catch (corsError) {
+                    // If CORS error, try with a public CORS proxy
+                    fetchUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlInput.value)}`;
+                    response = await fetch(fetchUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const spec = JSON.parse(data.contents);
+                    const html = generateHTML(spec);
+                    output.innerHTML = html;
+                    exportBtn.style.display = 'inline-block';
+                    return;
+                }
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -267,9 +294,9 @@
         function generateHTML(spec) {
             let html = `
                 <div class="info-section">
-                    <h3>API</h3>
+                    <h3>Claims API</h3>
                     <p><strong>Version:</strong> ${spec.info?.version || 'N/A'}</p>
-                    <p><strong>Base URL:</strong> http{s}://{server name}/api/</p>
+                    <p><strong>Base URL:</strong> http{s}://{server name}/riskmasterapi/</p>
                 </div>
             `;
             
@@ -451,8 +478,39 @@
         
         function getDisplayName(tag) {
             const displayNames = {
+                'ClaimGC': 'General Claims',
+                'ClaimHC': 'Health Claims',
+                'ClaimLC': 'Life Claims',
+                'ClaimPC': 'Property Claims',
+                'ClaimWC': 'Workers Compensation Claims',
+                'ClaimVA': 'Vehicle Claims',
+                'Nonocc': 'Disability Claims',
+                'NonoCC': 'Disability Claims',
+                'NonOcc': 'Disability Claims'
             };
             return displayNames[tag] || tag;
+        }
+        
+        function downloadSample(version) {
+            const url = `https://raw.githubusercontent.com/paragsarin/openapidocumentation/main/sample-openapi-${version}.json`;
+            const filename = `sample-openapi-${version}.json`;
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    alert('Error downloading sample file: ' + error.message);
+                });
         }
         
         function exportHTML() {
